@@ -14,6 +14,7 @@ ALLOWED_RCONFIG_FUNC+=(
     "set_led_trigger"
     "set_led_pattern"
     "set_led_netdev"
+    "update_generic_hostname"
 )
 
 system_update() {
@@ -110,6 +111,34 @@ update_locale() {
     echo "locales locales/locales_to_be_generated multiselect $locale UTF-8" | debconf-set-selections
     rm "/etc/locale.gen"
     dpkg-reconfigure --frontend noninteractive locales
+}
+
+get_product_id() {
+    echo -e "\nFunction: get_product_id"
+
+    device=$(tr -d '\0' < /proc/device-tree/model)
+    echo "==> get_product_id: device name: $device <=="
+    product_id=$(echo "$device" | tr '[:upper:]' '[:lower:] ' | cut -c 7- | tr ' ' '-')
+
+    echo "==> get_product_id: $product_id <=="
+}
+
+update_hostname_by_product_id() {
+    echo -e "\nFunction: update_hostname"
+
+    get_product_id
+    echo "product_id: $product_id"
+    echo "$product_id" | sudo tee /etc/hostname
+}
+
+update_generic_hostname() {
+    __parameter_count_check 5 "$@"
+
+    for hostname in "$@"
+    do
+        echo "it's generic image, need to update the hostnmae"
+        update_hostname_by_product_id
+    done
 }
 
 enable_service() {
